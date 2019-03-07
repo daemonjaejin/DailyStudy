@@ -2,6 +2,9 @@ import org.junit.Assert;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Hashtable;
+
 @SpringBootTest
 public class TestCase {
 
@@ -72,6 +75,31 @@ public class TestCase {
         Assert.assertEquals(Money.dollar(7), result);
     }
 
+    @Test
+    public void testReduceMoney(){
+        Bank bank = new Bank();
+        Money result = bank.reduce(Money.dollar(1), "USD");
+        Assert.assertEquals(Money.dollar(1), result);
+    }
+
+    @Test
+    public void testReduceMoneyDifferentCurrency(){
+        Bank bank = new Bank();
+        bank.addRate("CHF", "USD", 2);
+        Money result = bank.reduce(Money.franc(2), "USD");
+        Assert.assertEquals(Money.dollar(1), result);
+    }
+
+    @Test
+    public void testArrayEquals(){
+        Assert.assertEquals(new Object[] {"abc"}, new Object[]{"abc"});
+        System.out.println(Arrays.deepEquals(new Object[] {"abc"}, new Object[]{"abc"}));
+    }
+
+    @Test
+    public void testIdentityRate(){
+        Assert.assertEquals(1, new Bank().rate("USD", "USD"));
+    }
 
 
 
@@ -122,18 +150,34 @@ class Money implements Expression{
 //        return new Money(amount + addend.amount, currency);
 //    }
 
+    public Money reduce(Bank bank, String to){
+        int rate = bank.rate(currency, to);
+//        int rate = (currency.equals("CHF") && to.equals("USD")) ? 2 : 1;
+        return new Money(amount / rate, to);
+    }
+
+
 }
 
 interface Expression{
-
+    Money reduce(Bank bank, String to);
 }
 
 class Bank{
+    private Hashtable rates = new Hashtable();
+
     Money reduce(Expression source, String to){
-        Sum sum = (Sum)source;
-//        int amount = sum.augend.amount + sum.addend.amount;
-//        return new Money(amount, to);
-        return sum.reduce(to);
+        return source.reduce(this, to);
+    }
+
+    int rate(String from, String to){
+        if(from.equals(to)) return 1;
+        Integer rate = (Integer)rates.get(new Pair(from, to));
+        return rate.intValue();
+    }
+
+    void addRate(String from, String to, int rate){
+        rates.put(new Pair(from, to), new Integer(rate));
     }
 }
 
@@ -147,8 +191,27 @@ class Sum implements Expression{
     Money augend;
     Money addend;
 
-    public Money reduce(String to){
+    public Money reduce(Bank bank, String to){
         int amount = augend.amount + addend.amount;
         return new Money(amount, to);
+    }
+}
+
+class Pair{
+    private String from;
+    private String to;
+
+    Pair(String from, String to){
+        this.from = from;
+        this.to = to;
+    }
+
+    public boolean equals(Object object){
+        Pair pair = (Pair)object;
+        return from.equals(pair.from) && to.equals(pair.to);
+    }
+
+    public int hashCode(){
+        return 0;
     }
 }

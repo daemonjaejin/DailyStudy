@@ -111,6 +111,33 @@ public class TestCase {
         Assert.assertEquals(Money.dollar(10), result);
     }
 
+    @Test
+    public void testSumPlusMoney(){
+        Expression fiveBucks = Money.dollar(5);
+        Expression tenFrancs = Money.franc(10);
+        Bank bank = new Bank();
+        bank.addRate("CHF", "USD", 2);
+        Expression sum = new Sum(fiveBucks, tenFrancs).plus(fiveBucks);
+        Money result = bank.reduce(sum, "USD");
+        Assert.assertEquals(Money.dollar(15), result);
+    }
+
+    @Test
+    public void testSumTimes(){
+        Expression fiveBucks = Money.dollar(5);
+        Expression tenFrancs = Money.franc(10);
+        Bank bank = new Bank();
+        bank.addRate("CHF", "USD", 2);
+        Expression sum = new Sum(fiveBucks, tenFrancs).times(2);
+        Money result = bank.reduce(sum, "USD");
+        Assert.assertEquals(Money.dollar(20), result);
+    }
+
+    @Test
+    public void testPlusSameCurrencyRetrunMoney(){
+        Expression sum = Money.dollar(1).plus(Money.dollar(1));
+        Assert.assertTrue(sum instanceof Money);
+    }
 
 }
 
@@ -147,7 +174,7 @@ class Money implements Expression{
         return currency;
     }
 
-    Expression times(int multiplier){
+    public Expression times(int multiplier){
         return new Money(amount * multiplier, currency);
     }
 
@@ -171,6 +198,7 @@ class Money implements Expression{
 interface Expression{
     Money reduce(Bank bank, String to);
     Expression plus(Expression addend);
+    Expression times(int multiplier);
 }
 
 class Bank{
@@ -194,7 +222,8 @@ class Bank{
 class Sum implements Expression{
 
     public Expression plus(Expression addend){
-        return null;
+//        return null;
+        return new Sum(this, addend);
     }
 
     Expression augend;
@@ -216,6 +245,11 @@ class Sum implements Expression{
     public Money reduce(Bank bank, String to){
         int amount = augend.reduce(bank, to).amount + addend.reduce(bank, to).amount;
         return new Money(amount, to);
+    }
+
+    public Expression times(int multiplier){
+        return new Sum(augend.times(multiplier),
+                addend.times(multiplier));
     }
 }
 

@@ -101,13 +101,22 @@ public class TestCase {
         Assert.assertEquals(1, new Bank().rate("USD", "USD"));
     }
 
+    @Test
+    public void testMixedAddition(){
+        Expression fiveBucks = Money.dollar(5);
+        Expression tenFranks = Money.franc(10);
+        Bank bank = new Bank();
+        bank.addRate("CHF", "USD", 2);
+        Money result = bank.reduce((fiveBucks).plus(tenFranks), "USD");
+        Assert.assertEquals(Money.dollar(10), result);
+    }
 
 
 }
 
 class Money implements Expression{
 
-    Expression plus(Money addend){
+    public Expression plus(Expression addend){
         return new Sum(this, addend);
     }
 
@@ -138,9 +147,9 @@ class Money implements Expression{
         return currency;
     }
 
-    Money times(int multiplier){
+    Expression times(int multiplier){
         return new Money(amount * multiplier, currency);
-    };
+    }
 
     public String toString(){
         return amount + " " + currency;
@@ -161,6 +170,7 @@ class Money implements Expression{
 
 interface Expression{
     Money reduce(Bank bank, String to);
+    Expression plus(Expression addend);
 }
 
 class Bank{
@@ -183,16 +193,28 @@ class Bank{
 
 class Sum implements Expression{
 
-    Sum(Money augend, Money addend){
+    public Expression plus(Expression addend){
+        return null;
+    }
+
+    Expression augend;
+    Expression addend;
+
+    Sum(Expression augend, Expression addend){
         this.augend = augend;
         this.addend = addend;
     }
 
-    Money augend;
-    Money addend;
+//    Sum(Money augend, Money addend){
+//        this.augend = augend;
+//        this.addend = addend;
+//    }
+
+//    Money augend;
+//    Money addend;
 
     public Money reduce(Bank bank, String to){
-        int amount = augend.amount + addend.amount;
+        int amount = augend.reduce(bank, to).amount + addend.reduce(bank, to).amount;
         return new Money(amount, to);
     }
 }

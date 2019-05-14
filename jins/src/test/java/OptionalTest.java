@@ -1,6 +1,12 @@
 import domain.Member;
 import domain.Member2;
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
+import org.springframework.util.TypeUtils;
 
+import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,7 +23,11 @@ public class OptionalTest {
 
 //        test4(new Member());
 
-        test5();
+//        test5();
+
+//        test6();
+
+        test7();
 
     }
 
@@ -138,6 +148,159 @@ public class OptionalTest {
 
     }
 
+    public static void test6(){
 
+        List<Member> list = new ArrayList<>();
+        list.add(new Member(){{
+            setAge("10");
+            setName("name");
+        }});
+        String name = list.stream().filter(c -> c.getName().equals("name2")).map(Member::getAge).findFirst().orElse(null);
+        if(StringUtils.isEmpty(name)){
+            System.out.println("empty");
+        }else{
+            System.out.println("no empty");
+        }
+        int seq=0;
+        String filename="/path/to/file/filename.txt";
+        String strNm = String.format("%s_%s_%s_%s_%s.%s", "metaId", "pocTypNm", "imgTypCd", new SimpleDateFormat("yyyyMMddHHmmssSSS").format(System.currentTimeMillis()), seq==0 ? "01" : seq<10 ? "0"+seq : seq, FilenameUtils.getExtension(filename));
+        /**
+         * FilenameUtils.getExtension("");
+         * 확장자 추출
+         * */
+        FilenameUtils.getExtension("");
+        System.out.println(strNm);
+
+        String preFix=FilenameUtils.getPrefix(filename);
+        System.out.println("preFix : " + preFix);
+
+        String path=FilenameUtils.getPath(filename);
+        System.out.println(path);
+
+        String fullPath=FilenameUtils.getFullPath(filename);
+        System.out.println(fullPath);
+
+        String name1=FilenameUtils.getName(filename);
+        System.out.println(name1);
+
+        String baseName=FilenameUtils.getBaseName(filename);
+        System.out.println(baseName);
+
+        String extension=FilenameUtils.getExtension(filename);
+        System.out.println(extension);
+
+        String targetValue = "a,b,c,d,e";
+        String [] result = StringUtils.commaDelimitedListToStringArray(targetValue);
+
+        for (String str : result){
+            System.out.println(str);
+        }
+
+        String orginPathPlus = StringUtils.applyRelativePath("/a/b", "/c");
+        System.out.println(orginPathPlus);
+
+    }
+
+    public static void test7(){
+
+
+        SomeClass someClass = new SomeClass();
+        Field field = ReflectionUtils.findField(SomeClass.class, "aField");
+        ReflectionUtils.makeAccessible(field);
+        String aField = (String)ReflectionUtils.getField(field, someClass);
+        ReflectionUtils.setField(field, someClass, "test");
+
+        // null && empty check
+        System.out.println(StringUtils.isEmpty(""));
+        System.out.println(StringUtils.isEmpty(null));
+
+        // null && empty && 공백이 아닌 문자가 하나 있는지 체크
+        System.out.println(StringUtils.hasText("a"));
+
+        // null && empty && 공백이 아닌 문자 길이가 있는지 체크
+        System.out.println(StringUtils.hasLength("a"));
+
+        String word = " a b c ";
+        // 공백이 있는지 여부 확인
+        System.out.println("공백 : " + StringUtils.containsWhitespace(word));
+
+        // 앞뒤 공백 제거
+        String word2 = StringUtils.trimWhitespace(word);
+        System.out.println("공백여부2 : " + word2);
+
+        // 모든 공백 제거
+        String word3 = StringUtils.trimAllWhitespace(word);
+        System.out.println("공백여부3 : " + word3);
+
+        // 선행 공백 제거
+        String word4 = StringUtils.trimLeadingWhitespace(word);
+        System.out.println("공백여부4 : " + word4);
+
+        // 후행 공백 제거
+        String word5 = StringUtils.trimTrailingWhitespace(word);
+        System.out.println("공백여부5 : " + word5);
+
+        // 대소문자 구분없이 해당 prefix로 시작하는 여부
+        System.out.println(StringUtils.startsWithIgnoreCase(word3, "a"));
+
+        // 대소문자 구분없이 해당 suffix로 끝나는지 여부
+        System.out.println(StringUtils.endsWithIgnoreCase(word3, "c"));
+
+        // 해당하는 문자열 모두변경, newPattern이 null인 경우 변경하지 않음
+        String word6 = StringUtils.replace(word, "f", "d");
+        System.out.println("문자6 : " + word6);
+
+        // 해당하는 문자열 모두 삭제
+        String word7 = StringUtils.delete(word, "a");
+        System.out.println("문자7 : " + word7);
+
+        // 문자열 앞뒤로 ' 를 분여서 반환
+        String word8 = StringUtils.quote(word);
+        System.out.println("문자8 : " + word8);
+
+        // 매개변수가 String 객체인 경우 quote 처리하여 반환
+        Object obj9 = StringUtils.quoteIfString(word);
+        System.out.println("obj9 : " + obj9);
+
+        // 설정된 구분자 기준으로 마지막 문자열 반환
+        String word10 = StringUtils.unqualify(word, 'a');
+        System.out.println("문자10 : " + word10);
+
+        // '.' 문자열을 기준으로 마지막 문자열 반환
+        String word11 = StringUtils.unqualify("abc.def.ghi");
+        System.out.println("문자11 : " + word11);
+
+        System.out.println(StringUtils.capitalize(word3));
+
+        System.out.println(StringUtils.uncapitalize(word3.toUpperCase()));
+
+        // 오른쪽에 있는 타입이 왼쪽에 있는 타입의 하위 타입인지 체크
+        System.out.println(TypeUtils.isAssignable(SomeClass.class, OtherClass.class)); // true
+
+        // 오른쪽에 있는 타입이 왼쪽에 있는 타입의 하위 타입인지 체크
+        System.out.println(TypeUtils.isAssignable(OtherClass.class, SomeClass.class)); // false
+
+        System.out.println(someClass.getaField());
+
+    }
+
+
+
+}
+
+
+class SomeClass{
+    private String aField;
+
+    public String getaField() {
+        return aField;
+    }
+
+    public void setaField(String aField) {
+        this.aField = aField;
+    }
+}
+
+class OtherClass extends SomeClass{
 
 }
